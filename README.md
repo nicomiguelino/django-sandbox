@@ -13,7 +13,7 @@ This project is a sandbox for learning and playing with Django.
 
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
 1. Create a new project or select an existing one
-1. Go to Credentials > Create Credentials > OAuth Client ID
+1. Go to Credentials &rarr; Create Credentials &rarr; OAuth Client ID
 1. Configure the OAuth consent screen if not already done
 1. Create a Web Application type credential with:
    - Authorized redirect URIs: `http://localhost:8080/google/oauth/callback`
