@@ -1,4 +1,4 @@
-# :lock: Django Sandbox
+# :beach_umbrella: Django Sandbox
 
 ## :dart: Overview
 
