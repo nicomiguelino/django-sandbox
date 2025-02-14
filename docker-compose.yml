@@ -1,0 +1,16 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.backend.dev
+      args:
+        USER_ID: ${UID:-1000}
+        GROUP_ID: ${GID:-1000}
+        USER_NAME: ${USER:-user}
+    volumes:
+      - .:/app
+    ports:
+      - "8080:8000"
+    command: ["bash", "bin/start_server.sh"]
+    profiles: ["dev"]
+
