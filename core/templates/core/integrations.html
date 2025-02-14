@@ -1,3 +1,57 @@
 <h1>Integrations</h1>
 
-Anything related to integrating third party services goes here.
+<div class="integration-section">
+    <h2>Google Account</h2>
+
+    {% if google_connected %}
+        <div class="connected-status">
+            <span class="status-badge connected">Connected</span>
+            <p>Connected as: {{ google_email }}</p>
+            <form method="POST" action="{% url 'core:disconnect_google' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">Disconnect Google Account</button>
+            </form>
+        </div>
+    {% else %}
+        <div class="connect-prompt">
+            <p>Connect your Google account to enable Calendar integration</p>
+            <a href="{% url 'core:google_oauth_init' %}" class="btn btn-primary">
+                Connect to Google
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .integration-section {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+    }
+    .status-badge {
+        padding: 0.25rem 0.75rem;
+        border-radius: 1rem;
+        font-size: 0.875rem;
+    }
+    .status-badge.connected {
+        background-color: #28a745;
+        color: white;
+    }
+    .btn {
+        padding: 0.5rem 1rem;
+        border-radius: 4px;
+        text-decoration: none;
+        display: inline-block;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        color: white;
+        border: none;
+    }
+    .btn-danger {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+    }
+</style>
