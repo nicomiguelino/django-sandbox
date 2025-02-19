@@ -24,12 +24,18 @@ class IntegrationsView(TemplateView):
         google_email = None
 
         if self.request.session.get('google_credentials'):
-            google_connected = True
-            # Get user email using Google People API
-            credentials = Credentials(**json.loads(self.request.session['google_credentials']))
-            service = build('oauth2', 'v2', credentials=credentials)
-            user_info = service.userinfo().get().execute()
-            google_email = user_info.get('email')
+            try:
+                credentials = Credentials(**json.loads(self.request.session['google_credentials']))
+                service = build('oauth2', 'v2', credentials=credentials)
+                user_info = service.userinfo().get().execute()
+                google_email = user_info.get('email')
+                google_connected = True
+            except Exception:
+                # If there's any error with the credentials, clear them and treat as disconnected
+                if 'google_credentials' in self.request.session:
+                    del self.request.session['google_credentials']
+                google_connected = False
+                google_email = None
 
         context.update({
             'google_connected': google_connected,
@@ -51,7 +57,8 @@ def google_oauth_init(request):
 
     authorization_url, state = flow.authorization_url(
         access_type='offline',
-        include_granted_scopes='true'
+        include_granted_scopes='true',
+        prompt='consent'
     )
 
     request.session['google_oauth_state'] = state
