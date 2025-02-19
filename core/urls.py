@@ -9,4 +9,5 @@ urlpatterns = [
     path('google/init/', views.google_oauth_init, name='google_oauth_init'),
     path('google/callback/', views.google_oauth_callback, name='google_oauth_callback'),
     path('google/disconnect/', views.disconnect_google, name='disconnect_google'),
+    path('calendar/', views.calendar_view, name='calendar'),
 ]

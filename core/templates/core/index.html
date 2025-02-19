@@ -1,1 +1,10 @@
-<h1>Hello, World!</h1>
+{% extends 'base.html' %}
+
+{% block title %}Home - Django Sandbox{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Welcome to Django Sandbox</h1>
+    <p class="lead">A playground for testing Django integrations</p>
+</div>
+{% endblock %}

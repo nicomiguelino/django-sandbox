@@ -1,11 +1,12 @@
 from django.views.generic import TemplateView
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.conf import settings
 from django.urls import reverse
 from google_auth_oauthlib.flow import Flow
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import json
+from .google_calendar import list_upcoming_events
 
 
 class IndexView(TemplateView):
@@ -92,3 +93,11 @@ def disconnect_google(request):
         if 'google_credentials' in request.session:
             del request.session['google_credentials']
     return redirect('core:integrations')
+
+
+def calendar_view(request):
+    if 'google_credentials' not in request.session:
+        return redirect('core:google_oauth_init')
+
+    events = list_upcoming_events(request)
+    return render(request, 'core/calendar.html', {'events': events})

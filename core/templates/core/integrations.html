@@ -1,25 +1,32 @@
-<h1>Integrations</h1>
+{% extends 'base.html' %}
 
-<div class="integration-section">
-    <h2>Google Account</h2>
+{% block title %}Integrations - Django Sandbox{% endblock %}
 
-    {% if google_connected %}
-        <div class="connected-status">
-            <span class="status-badge connected">Connected</span>
-            <p>Connected as: {{ google_email }}</p>
-            <form method="POST" action="{% url 'core:disconnect_google' %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-danger">Disconnect Google Account</button>
-            </form>
-        </div>
-    {% else %}
-        <div class="connect-prompt">
-            <p>Connect your Google account to enable Calendar integration</p>
-            <a href="{% url 'core:google_oauth_init' %}" class="btn btn-primary">
-                Connect to Google
-            </a>
-        </div>
-    {% endif %}
+{% block content %}
+<div class="container">
+    <h1>Integrations</h1>
+
+    <div class="integration-section">
+        <h2>Google Account</h2>
+
+        {% if google_connected %}
+            <div class="connected-status">
+                <span class="status-badge connected">Connected</span>
+                <p>Connected as: {{ google_email }}</p>
+                <form method="POST" action="{% url 'core:disconnect_google' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Disconnect Google Account</button>
+                </form>
+            </div>
+        {% else %}
+            <div class="connect-prompt">
+                <p>Connect your Google account to enable Calendar integration</p>
+                <a href="{% url 'core:google_oauth_init' %}" class="btn btn-primary">
+                    Connect to Google
+                </a>
+            </div>
+        {% endif %}
+    </div>
 </div>
 
 <style>
@@ -28,6 +35,7 @@
         padding: 1.5rem;
         border: 1px solid #ddd;
         border-radius: 8px;
+        background-color: white;
     }
     .status-badge {
         padding: 0.25rem 0.75rem;
@@ -55,3 +63,4 @@
         border: none;
     }
 </style>
+{% endblock %}
