@@ -7,6 +7,8 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import json
 from .google_calendar import list_upcoming_events
+from django.contrib.auth import get_user_model
+from core.models import GoogleCredentials
 
 
 class IndexView(TemplateView):
@@ -82,15 +84,38 @@ def google_oauth_callback(request):
     flow.fetch_token(authorization_response=request.build_absolute_uri())
     credentials = flow.credentials
 
-    # Store credentials in session
-    request.session['google_credentials'] = json.dumps({
+    # Get user info from Google
+    service = build('oauth2', 'v2', credentials=credentials)
+    user_info = service.userinfo().get().execute()
+    email = user_info['email']
+
+    # Create user if doesn't exist
+    User = get_user_model()
+    user, created = User.objects.get_or_create(
+        email=email,
+        defaults={
+            'username': email,
+            'is_active': True
+        }
+    )
+
+    # Store or update credentials in database
+    creds_data = {
         'token': credentials.token,
         'refresh_token': credentials.refresh_token,
         'token_uri': credentials.token_uri,
         'client_id': credentials.client_id,
         'client_secret': credentials.client_secret,
         'scopes': credentials.scopes
-    })
+    }
+
+    google_creds, _ = GoogleCredentials.objects.update_or_create(
+        user=user,
+        defaults=creds_data
+    )
+
+    # Also store in session for immediate use if needed
+    request.session['google_credentials'] = json.dumps(creds_data)
 
     return redirect('core:integrations')
 

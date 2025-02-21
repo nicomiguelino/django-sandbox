@@ -1,16 +1,24 @@
+from django.conf import settings
 from django.db import models
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
 
 class GoogleCredentials(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='google_credentials'
+    )
     token = models.TextField()
-    refresh_token = models.TextField()
-    token_uri = models.CharField(max_length=255)
-    client_id = models.CharField(max_length=255)
-    client_secret = models.CharField(max_length=255)
-    scopes = models.TextField()
-    expiry = models.DateTimeField(null=True)
+    refresh_token = models.TextField(null=True, blank=True)
+    token_uri = models.TextField()
+    client_id = models.TextField()
+    client_secret = models.TextField()
+    scopes = models.JSONField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Google Credential'
+        verbose_name_plural = 'Google Credentials'
+
+    def __str__(self):
+        return f'Google credentials for {self.user.email}'
