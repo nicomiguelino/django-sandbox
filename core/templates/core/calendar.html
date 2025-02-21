@@ -7,7 +7,13 @@
         {% for event in events %}
             <div class="event-card">
                 <h3>{{ event.summary }}</h3>
-                <p>Start: {{ event.start.dateTime|default:event.start.date }}</p>
+
+                {% if event.start.dateTime %}
+                    <p>Start: {{ event.start.dateTime }}</p>
+                {% else %}
+                    <p>Start: {{ event.start.date }}</p>
+                {% endif %}
+
                 {% if event.description %}
                     <p>{{ event.description }}</p>
                 {% endif %}
