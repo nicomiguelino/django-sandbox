@@ -7,13 +7,16 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import json
 from .google_calendar import list_upcoming_events
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login
 from core.models import GoogleCredentials
 
 
 class IndexView(TemplateView):
     template_name = 'core/index.html'
 
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
 
 class IntegrationsView(TemplateView):
     template_name = 'core/integrations.html'
@@ -116,6 +119,9 @@ def google_oauth_callback(request):
 
     # Also store in session for immediate use if needed
     request.session['google_credentials'] = json.dumps(creds_data)
+
+    # Log in the user
+    login(request, user, backend='core.auth.GoogleOAuthBackend')
 
     return redirect('core:integrations')
 

@@ -133,3 +133,8 @@ GOOGLE_CLIENT_SECRETS_FILE = 'client_secrets.json'  # Path to your OAuth client 
 # Only set this in development!
 if DEBUG:
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
+AUTHENTICATION_BACKENDS = [
+    'django.contrib.auth.backends.ModelBackend',  # Default backend
+    'core.auth.GoogleOAuthBackend',  # Google OAuth backend
+]
