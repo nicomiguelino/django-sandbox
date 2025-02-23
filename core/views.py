@@ -9,6 +9,8 @@ import json
 from .google_calendar import list_upcoming_events
 from django.contrib.auth import get_user_model, login
 from core.models import GoogleCredentials
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 class IndexView(TemplateView):
@@ -141,11 +143,15 @@ def calendar_view(request):
     return render(request, 'core/calendar.html', {'events': events})
 
 
+@method_decorator(login_required, name='dispatch')
 class SettingsView(TemplateView):
     template_name = 'core/settings.html'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+
+        # Add API keys to context
+        context['api_keys'] = self.request.user.api_keys.filter(is_active=True).order_by('-created_at')
 
         # Check if user has connected Google account
         google_email = None
