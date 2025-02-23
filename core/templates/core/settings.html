@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Settings - Django Sandbox{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1>Settings</h1>
+
+    <div class="settings-section">
+        <h2>Account Settings</h2>
+
+
+        <div class="form-group">
+            <label>Connected Google Account</label>
+            <p class="form-control-static">
+                {% if google_email %}
+                    {{ google_email }}
+                {% else %}
+                    Not connected
+                {% endif %}
+            </p>
+        </div>
+    </div>
+</div>
+
+<style>
+    .settings-section {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background-color: white;
+    }
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+    }
+    .form-control-static {
+        padding: 0.5rem 0;
+        color: #666;
+    }
+</style>
+{% endblock %}

@@ -133,3 +133,25 @@ def calendar_view(request):
 
     events = list_upcoming_events(request)
     return render(request, 'core/calendar.html', {'events': events})
+
+
+class SettingsView(TemplateView):
+    template_name = 'core/settings.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Check if user has connected Google account
+        google_email = None
+        if self.request.session.get('google_credentials'):
+            try:
+                credentials = Credentials(**json.loads(self.request.session['google_credentials']))
+                service = build('oauth2', 'v2', credentials=credentials)
+                user_info = service.userinfo().get().execute()
+                google_email = user_info.get('email')
+            except Exception:
+                if 'google_credentials' in self.request.session:
+                    del self.request.session['google_credentials']
+
+        context['google_email'] = google_email
+        return context
