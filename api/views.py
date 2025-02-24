@@ -113,3 +113,58 @@ def protected_endpoint(request):
         'message': f'Hello {request.user.email}!',
         'api_key_name': request.auth.name  # request.auth contains the APIKey instance
     })
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_google_token(request):
+    """Get a valid Google access token, refreshing if necessary."""
+
+    # Get credentials for the user
+    google_creds = GoogleCredentials.objects.filter(user=request.user).first()
+
+    if not google_creds:
+        return Response(
+            {'error': 'No Google credentials found. Please connect your Google account first.'},
+            status=status.HTTP_404_NOT_FOUND
+        )
+
+    # Create credentials object
+    credentials = Credentials(
+        token=google_creds.token,
+        refresh_token=google_creds.refresh_token,
+        token_uri=google_creds.token_uri,
+        client_id=google_creds.client_id,
+        client_secret=google_creds.client_secret,
+        scopes=google_creds.scopes
+    )
+
+    # Check if credentials are expired and refresh if needed
+    if not credentials.valid:
+        if not credentials.refresh_token:
+            return Response(
+                {'error': 'No refresh token available. Please reconnect your Google account.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        try:
+            credentials.refresh(Request())
+
+            # Update stored credentials
+            google_creds.token = credentials.token
+            google_creds.refresh_token = credentials.refresh_token
+            google_creds.token_uri = credentials.token_uri
+            google_creds.client_id = credentials.client_id
+            google_creds.client_secret = credentials.client_secret
+            google_creds.scopes = credentials.scopes
+            google_creds.save()
+
+        except Exception as e:
+            return Response(
+                {'error': f'Failed to refresh token: {str(e)}'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+    return Response({
+        'access_token': credentials.token,
+        'expires_at': credentials.expiry.isoformat() if credentials.expiry else None
+    })
