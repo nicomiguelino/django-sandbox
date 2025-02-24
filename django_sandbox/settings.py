@@ -138,3 +138,10 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend
     'core.auth.GoogleOAuthBackend',  # Google OAuth backend
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+        'api.authentication.APIKeyAuthentication',
+    ],
+}

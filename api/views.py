@@ -1,9 +1,11 @@
 from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from core.models import APIKey
 from .serializers import APIKeySerializer
+from .authentication import APIKeyAuthentication
 
 class IndexView(APIView):
     def get(self, request):
@@ -47,3 +49,11 @@ class DeleteAPIKeyView(APIView):
                 {'error': 'API key not found'},
                 status=status.HTTP_404_NOT_FOUND
             )
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def protected_endpoint(request):
+    return Response({
+        'message': f'Hello {request.user.email}!',
+        'api_key_name': request.auth.name  # request.auth contains the APIKey instance
+    })
