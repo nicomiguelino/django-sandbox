@@ -7,7 +7,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import json
 from .google_calendar import list_upcoming_events
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import get_user_model, login, logout
 from core.models import GoogleCredentials
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -137,6 +137,7 @@ def disconnect_google(request):
     if request.method == 'POST':
         if 'google_credentials' in request.session:
             del request.session['google_credentials']
+            logout(request)
     return redirect('core:integrations')
 
 
