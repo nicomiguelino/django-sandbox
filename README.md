@@ -66,6 +66,24 @@ This project is a sandbox for learning and playing with Django.
   docker compose --profile dev logs -f
   ```
 
+### :computer: API Usage
+
+#### Get Google Calendar events:
+
+  ```bash
+  GOOGLE_ACCESS_TOKEN=<your_google_token> ./bin/get_calendar_events.sh
+  ```
+
+#### Get Access Token
+
+> [!IMPORTANT]
+> Make sure to generate an API key in the Settings page before proceeding.
+
+```bash
+curl -sX POST -H "Authorization: Token <your_api_key>" \
+   http://localhost:8000/api/google/token/
+```
+
 ## :dna: Project Structure
 
 The project uses:
