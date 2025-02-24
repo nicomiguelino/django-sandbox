@@ -2,12 +2,16 @@ from rest_framework import status
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework.permissions import IsAuthenticated
 from core.models import APIKey, GoogleCredentials
 from core.google_calendar import list_upcoming_events
 from google.oauth2.credentials import Credentials
 from django.conf import settings
 from .serializers import APIKeySerializer
+import json
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
+from datetime import datetime
 
 
 class IndexView(APIView):
@@ -16,17 +20,10 @@ class IndexView(APIView):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@permission_classes([IsAuthenticated])
 def get_calendar_events(request):
-    # Get API key from request header
-    api_key = request.headers.get('X-API-Key')
-
-    # Validate API key (you should store this securely in settings)
-    if api_key != settings.KIOSK_API_KEY:
-        return Response({'error': 'Invalid API key'}, status=401)
-
-    # Get credentials for a specific user (you'll need to decide which user's calendar to use)
-    google_creds = GoogleCredentials.objects.filter(user__email='your-designated-user@example.com').first()
+    # Get credentials for a specific user
+    google_creds = GoogleCredentials.objects.filter(user__email=request.user.email).first()
 
     if not google_creds:
         return Response({'error': 'No credentials found'}, status=404)
@@ -41,10 +38,33 @@ def get_calendar_events(request):
         scopes=google_creds.scopes
     )
 
-    # Get events using your existing function
-    events = list_upcoming_events(credentials)
+    # Check if credentials are expired and refresh if needed
+    if not credentials.valid:
+        try:
+            credentials.refresh(Request())
 
-    return Response({'events': events})
+            # Update stored credentials in database only
+            google_creds.token = credentials.token
+            google_creds.refresh_token = credentials.refresh_token
+            google_creds.token_uri = credentials.token_uri
+            google_creds.client_id = credentials.client_id
+            google_creds.client_secret = credentials.client_secret
+            google_creds.scopes = credentials.scopes
+
+            google_creds.save()
+        except Exception as e:
+            return Response({'error': 'Failed to refresh token'}, status=401)
+
+    calendar_service = build('calendar', 'v3', credentials=credentials)
+    events_result = calendar_service.events().list(
+        calendarId='primary',
+        timeMin=datetime.now().isoformat() + 'Z',
+        maxResults=10,
+        singleEvents=True,
+        orderBy='startTime'
+    ).execute()
+
+    return Response({'events': events_result})
 
 
 class GenerateAPIKeyView(APIView):
