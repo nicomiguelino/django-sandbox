@@ -142,6 +142,6 @@ AUTHENTICATION_BACKENDS = [
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
-        'api.authentication.APIKeyAuthentication',
+        'api.auth.APIKeyAuthentication',
     ],
 }
