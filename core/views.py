@@ -7,7 +7,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import json
 from .google_calendar import list_upcoming_events
-from django.contrib.auth import get_user_model, login
+from django.contrib.auth import get_user_model, login, logout
 from core.models import GoogleCredentials
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -74,6 +74,8 @@ def google_oauth_init(request):
 
 def google_oauth_callback(request):
     state = request.session['google_oauth_state']
+    # Get the authorization code from the request
+    auth_code = request.GET.get('code')
 
     flow = Flow.from_client_secrets_file(
         settings.GOOGLE_CLIENT_SECRETS_FILE,
@@ -85,6 +87,9 @@ def google_oauth_callback(request):
         state=state,
         redirect_uri=request.build_absolute_uri(reverse('core:google_oauth_callback'))
     )
+
+    # Store the authorization code in the session if needed
+    request.session['google_auth_code'] = auth_code
 
     flow.fetch_token(authorization_response=request.build_absolute_uri())
     credentials = flow.credentials
@@ -132,6 +137,7 @@ def disconnect_google(request):
     if request.method == 'POST':
         if 'google_credentials' in request.session:
             del request.session['google_credentials']
+            logout(request)
     return redirect('core:integrations')
 
 
