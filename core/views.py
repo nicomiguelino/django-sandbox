@@ -7,13 +7,18 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 import json
 from .google_calendar import list_upcoming_events
-from django.contrib.auth import get_user_model
+from django.contrib.auth import get_user_model, login
 from core.models import GoogleCredentials
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 
 
 class IndexView(TemplateView):
     template_name = 'core/index.html'
 
+    def get(self, request, *args, **kwargs):
+        context = self.get_context_data(**kwargs)
+        return self.render_to_response(context)
 
 class IntegrationsView(TemplateView):
     template_name = 'core/integrations.html'
@@ -122,6 +127,9 @@ def google_oauth_callback(request):
     # Also store in session for immediate use if needed
     request.session['google_credentials'] = json.dumps(creds_data)
 
+    # Log in the user
+    login(request, user, backend='core.auth.GoogleOAuthBackend')
+
     return redirect('core:integrations')
 
 
@@ -138,3 +146,29 @@ def calendar_view(request):
 
     events = list_upcoming_events(request)
     return render(request, 'core/calendar.html', {'events': events})
+
+
+@method_decorator(login_required, name='dispatch')
+class SettingsView(TemplateView):
+    template_name = 'core/settings.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Add API keys to context
+        context['api_keys'] = self.request.user.api_keys.filter(is_active=True).order_by('-created_at')
+
+        # Check if user has connected Google account
+        google_email = None
+        if self.request.session.get('google_credentials'):
+            try:
+                credentials = Credentials(**json.loads(self.request.session['google_credentials']))
+                service = build('oauth2', 'v2', credentials=credentials)
+                user_info = service.userinfo().get().execute()
+                google_email = user_info.get('email')
+            except Exception:
+                if 'google_credentials' in self.request.session:
+                    del self.request.session['google_credentials']
+
+        context['google_email'] = google_email
+        return context
