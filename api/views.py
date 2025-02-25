@@ -138,31 +138,41 @@ def get_google_token(request):
         scopes=google_creds.scopes
     )
 
-    # Check if credentials are expired and refresh if needed
-    if not credentials.valid:
-        if not credentials.refresh_token:
-            return Response(
-                {'error': 'No refresh token available. Please reconnect your Google account.'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+    # Always try to refresh the token to ensure it's valid
+    if not credentials.refresh_token:
+        return Response(
+            {'error': 'No refresh token available. Please reconnect your Google account.'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
-        try:
-            credentials.refresh(Request())
+    try:
+        # Force token refresh
+        credentials.refresh(Request())
 
-            # Update stored credentials
-            google_creds.token = credentials.token
-            google_creds.refresh_token = credentials.refresh_token
-            google_creds.token_uri = credentials.token_uri
-            google_creds.client_id = credentials.client_id
-            google_creds.client_secret = credentials.client_secret
-            google_creds.scopes = credentials.scopes
-            google_creds.save()
+        # Update stored credentials
+        google_creds.token = credentials.token
+        google_creds.refresh_token = credentials.refresh_token
+        google_creds.token_uri = credentials.token_uri
+        google_creds.client_id = credentials.client_id
+        google_creds.client_secret = credentials.client_secret
+        google_creds.scopes = credentials.scopes
+        google_creds.save()
 
-        except Exception as e:
-            return Response(
-                {'error': f'Failed to refresh token: {str(e)}'},
-                status=status.HTTP_401_UNAUTHORIZED
-            )
+    except Exception as e:
+        return Response(
+            {'error': f'Failed to refresh token: {str(e)}'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
+
+    # Verify the token by making a test API call
+    try:
+        service = build('oauth2', 'v2', credentials=credentials)
+        service.userinfo().get().execute()  # Test API call
+    except Exception as e:
+        return Response(
+            {'error': f'Token verification failed: {str(e)}'},
+            status=status.HTTP_401_UNAUTHORIZED
+        )
 
     return Response({
         'access_token': credentials.token,
