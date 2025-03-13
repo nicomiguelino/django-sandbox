@@ -57,6 +57,7 @@ def google_oauth_init(request):
         scopes=[
             'openid',
             'https://www.googleapis.com/auth/calendar.readonly',
+            'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/userinfo.email'
         ],
         redirect_uri=request.build_absolute_uri(reverse('core:google_oauth_callback'))
@@ -82,6 +83,7 @@ def google_oauth_callback(request):
         scopes=[
             'openid',
             'https://www.googleapis.com/auth/calendar.readonly',
+            'https://www.googleapis.com/auth/userinfo.profile',
             'https://www.googleapis.com/auth/userinfo.email'
         ],
         state=state,
