@@ -81,7 +81,7 @@ This project is a sandbox for learning and playing with Django.
 
 ```bash
 curl -sX POST -H "Authorization: Token <your_api_key>" \
-   http://localhost:8000/api/google/token/
+   http://localhost:8080/api/google/token/
 ```
 
 ## :dna: Project Structure
