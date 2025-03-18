@@ -8,6 +8,7 @@ class GoogleCredentials(models.Model):
         related_name='google_credentials'
     )
     token = models.TextField()
+    expiry = models.DateTimeField(null=True, blank=True)
     refresh_token = models.TextField(null=True, blank=True)
     token_uri = models.TextField()
     client_id = models.TextField()

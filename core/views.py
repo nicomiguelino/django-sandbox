@@ -11,6 +11,7 @@ from django.contrib.auth import get_user_model, login, logout
 from core.models import GoogleCredentials
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
+from django.utils import timezone
 
 
 class IndexView(TemplateView):
@@ -94,10 +95,9 @@ def google_oauth_callback(request):
     request.session['google_auth_code'] = auth_code
 
     flow.fetch_token(authorization_response=request.build_absolute_uri())
-    credentials = flow.credentials
 
     # Get user info from Google
-    service = build('oauth2', 'v2', credentials=credentials)
+    service = build('oauth2', 'v2', credentials=flow.credentials)
     user_info = service.userinfo().get().execute()
     email = user_info['email']
 
@@ -111,14 +111,23 @@ def google_oauth_callback(request):
         }
     )
 
+    credentials = json.loads(flow.credentials.to_json())
+
+    # Convert expiry string to datetime object if it exists
+    expiry = None
+    if credentials.get('expiry'):
+        expiry = timezone.datetime.fromisoformat(credentials['expiry'].replace('Z', '+00:00'))
+        expiry = timezone.make_aware(expiry) if timezone.is_naive(expiry) else expiry
+
     # Store or update credentials in database
     creds_data = {
-        'token': credentials.token,
-        'refresh_token': credentials.refresh_token,
-        'token_uri': credentials.token_uri,
-        'client_id': credentials.client_id,
-        'client_secret': credentials.client_secret,
-        'scopes': credentials.scopes
+        'token': credentials['token'],
+        'refresh_token': credentials['refresh_token'],
+        'token_uri': credentials['token_uri'],
+        'client_id': credentials['client_id'],
+        'client_secret': credentials['client_secret'],
+        'scopes': credentials['scopes'],
+        'expiry': expiry,
     }
 
     google_creds, _ = GoogleCredentials.objects.update_or_create(

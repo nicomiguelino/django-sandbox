@@ -7,6 +7,10 @@ ARG USER_NAME
 
 RUN useradd -u ${USER_ID} --create-home ${USER_NAME}
 
+RUN apt-get update -y && \
+    apt-get install -y \
+        sqlite3
+
 # Set environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \

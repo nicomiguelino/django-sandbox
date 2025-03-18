@@ -119,7 +119,6 @@ def protected_endpoint(request):
 def get_google_token(request):
     """Get a valid Google access token, refreshing if necessary."""
 
-    # Get credentials for the user
     google_creds = GoogleCredentials.objects.filter(user=request.user).first()
 
     if not google_creds:
@@ -135,7 +134,9 @@ def get_google_token(request):
         token_uri=google_creds.token_uri,
         client_id=google_creds.client_id,
         client_secret=google_creds.client_secret,
-        scopes=google_creds.scopes
+        scopes=google_creds.scopes,
+        # Convert expiry to naive datetime if it's timezone-aware
+        expiry=google_creds.expiry.replace(tzinfo=None) if google_creds.expiry else None,
     )
 
     # Always try to refresh the token to ensure it's valid
@@ -146,17 +147,18 @@ def get_google_token(request):
         )
 
     try:
-        # Force token refresh
-        credentials.refresh(Request())
+        if not credentials.valid:
+            credentials.refresh(Request())
 
-        # Update stored credentials
-        google_creds.token = credentials.token
-        google_creds.refresh_token = credentials.refresh_token
-        google_creds.token_uri = credentials.token_uri
-        google_creds.client_id = credentials.client_id
-        google_creds.client_secret = credentials.client_secret
-        google_creds.scopes = credentials.scopes
-        google_creds.save()
+            # Update stored credentials
+            google_creds.token = credentials.token
+            google_creds.refresh_token = credentials.refresh_token
+            google_creds.token_uri = credentials.token_uri
+            google_creds.client_id = credentials.client_id
+            google_creds.client_secret = credentials.client_secret
+            google_creds.scopes = credentials.scopes
+            google_creds.expiry = credentials.expiry
+            google_creds.save()
 
     except Exception as e:
         return Response(
